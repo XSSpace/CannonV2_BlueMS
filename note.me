@@ -1,0 +1,229 @@
+说明：本项目试图利用juma的应用开发套件小钢炮实现温湿度和气压的采集。
+juma本身提供一台SDK，但是手机端应用后期没有维护。
+https://github.com/JUMA-IO/STM32_Platform
+http://www.juma.io/doc/zh/stm32_platform/cannon_first/
+juma的应用程序源码：https://github.com/JUMA-IO/BLE_Debugger_iOS
+
+而小钢炮最初的设计基于ST自己的平台，而这个平台依旧在维护。
+ST手机端监控软件苹果和Arduino应用都可以使用，名称叫做BlueMS。而且有可使用的SDK。
+Arduino端：https://github.com/STMicroelectronics-CentralLabs/BlueSTSDK_Android
+iphone端：https://github.com/STMicroelectronics-CentralLabs/STBlueMS_iOS
+硬件平台目前对应于FP-SNS-MOTENV1，项目网址：
+http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-ode-function-pack-sw/fp-sns-motenv1.html
+
+1、juma小钢炮传感器有如下这些
+·气压计：LPS25HB
+·温湿度：HTS221
+·磁力计+加速度计：LSM303AGR
+·陀螺仪+加速度计：LSM6DS3
+其它主要芯片
+·主控：STMF401RET6
+·BLE: BlueNRG-MS
+
+其主要传感器和ST的X-NUCLEO-IKS01A2相似。但是六轴传感器略微不同。
+
+X-NUCLEO-IKS01A1传感器如下：
+·气压计：LPS25HB
+·温湿度：HTS221
+·磁力计：LIS3MDL
+·陀螺仪+加速度计：LSM6DS0
+
+X-NUCLEO-IKS01A2传感器如下：
+·气压计：LPS22HB
+·温湿度：HTS221
+·磁力计+加速度计：LSM303AGR
+·陀螺仪+加速度计：LSM6DSL
+
+SensorTile（STEVAL-STLKT01V1）和小钢炮更像，但是传感器不同。
+
+
+
+2、ST目前关于MEMS和其它传感器的包只要有：X-CUBE-MEMS1和X-CUBE-MEMS-XT1
+
+3、FP-SNS-MOTENV1这个项目包含了传感器和BleNRG等。所以可以作为一个参考。
+（FP-SNS-MOTENV1：https://my.st.com/content/my_st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-ode-function-pack-sw/fp-sns-motenv1.html）
+或者（FP-SNS-ALLMEMS1）：http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-ode-function-pack-sw/fp-sns-allmems1.html
+另外相关的两个软件SDK是BlueMS和SensNet
+BlueMS：http://www.st.com/content/st_com/en/products/embedded-software/wireless-connectivity-software/bluems.html
+SensNet：http://www.st.com/content/st_com/en/products/embedded-software/wireless-connectivity-software/sensnet.html
+
+4、目前策略是更改FP-SNS-MOTENV1这个项目。
+沿用项目架构，更改或者说添加一个BSP作为Cannon_v2的BSP。为了减小工作量，试图从X-NUCLEO-IKS01A1这个板子的工程修改。因为工程实际也支持LSM6DS3，所以最新主要的修改是将磁力计从LIS3MDL改为LSM303AGR。
+另一方面Cannon V2使用的blueNRG-MS虽然不和X-NUCLEO-IDB05A1完全一样。前者使用芯片，后者使用模块SPBTLE-RF。但可以认为两者是一样的。
+尽管芯片都包含，但是接口并不一致。需要重新确认各自的端口.
+
+5、下面记录Cannon V2的端口和BlueNRG-MS的区别：
+
+A: BlueNRG-MS
+
+序号		Signal      CannonV2  IDB051A
+1			SPI-MOSI		PA7				PA7
+2			SPI-MISO		PA6				PA6
+3			SPI-CLK			PA5				PB3
+4			SPI-CSN			PA4				PA1
+5			SPI-RST			PB1				PA8
+6			SPI-IRQ			PC4				PA0
+
+B: LSM6DS3
+序号		Signal      CannonV2  iks01a1(mki160v1)
+1			I2C-SDA			PB7				PB9
+2			I2C-SCL			PB6				PB8
+3			ACCINT1			PC0				PA4
+4			ACCINT2 		NC        PB0
+(PS:实际上mki160v1包含spi接口，这里只使用i2c接口对应的引脚。)
+
+
+C:LPS25HB
+序号		Signal      CannonV2  iks01a1
+1			I2C-SDA			PB7				PB9
+2			I2C-SCL			PB6				PB8
+3			PRSINT			PC2				PB4
+
+D:HTS221
+序号		Signal      CannonV2  iks01a1
+1			I2C-SDA			PB7				PB9
+2			I2C-SCL			PB6				PB8
+3			TEMPINT			PC1				PB10
+
+E:LSM303AGR(instead of LIS3MDL)
+序号		Signal      CannonV2  iks01a1
+1			I2C-SDA			PB7				PB9
+2			I2C-SCL			PB6				PB8
+3			MAGINT			PB5				PC1
+(PS:因为芯片不一样所以信号也不完全一样，这里以cannon为主)
+
+此外串口也可能发生了变化，USB接口也可能发生了变化。
+F:USB接口
+序号		Signal      CannonV2  Nucleo
+1			USB-DM			PA11			
+2			USB-DP			PA12
+（MOTENV1中nucleo使用串口进行打印，而不是USBCDC）
+
+G:Serial接口
+序号		Signal      CannonV2  Nucleo
+1			UART1-RX		PA10			
+2			UART1-TX		PA9
+3			UART2-RX		PA3				对应STLK-TX
+4			UART2-TX		PA2 			对应STLK-RX
+(PS:观察代码发现信息的输出正式通过UART2来实现的)
+
+H:Buttons(exclude RESET Buttton)
+序号		Signal      CannonV2  Nucleo
+1			PC13				---				UserButton			（can add a button）
+
+
+I:LEDs(exclude LD1、LD3)
+序号		Signal      CannonV2  Nucleo
+1			PA5					SPI1_SCK	LD2							(need relocate)
+2			PB3					LED 			---							（as a alternative）
+
+
+6、开始理解代码接口，这样更改代码才可能有的放矢。
+主要关注点，端口的配置和设备何初始化。另外必须注意屏蔽掉按钮部分代码（因为cannon无按钮）。
+
+main函数里面有两个十分重要的函数（对于nucleo）：
+>1 InitTargetPlatform(TARGET_NUCLEO)
+		与硬件配置相关的是UART_Global_Init、I2C_Global_Init、SPI_Global_Init、BSP_PB_Init、BSP_LED_Init
+		当然如果是sensorTile的话还有其它函数。
+
+		此外还需要关注Init_MEM1_Sensors，这个函数用来配置所有的MEMS传感器
+
+		TargetBoardFeatures.bnrg_expansion_board这个参数存储的是开发板的信息。(TargetBoardFeatures包含了很多信息，很重要)
+
+>2 Init_BlueNRG_Stack
+		其中与硬件配置有关的是BNRG_SPI_Init和BlueNRG_RST
+		另外需要注意这个函数getBlueNRGVersion，它用来识别蓝牙BlueNRG的硬件版本。
+
+>3 Init_BlueNRG_Custom_Services
+>4 InitHWFeatures
+
+
+另外MOTENV1_PRINTF在整个程序中都同样重要。
+
+Note：
+	1> UART_Global_Init的硬件引脚配置位于文件stm32f4xx_hal_msp.c。因为硬件接口相同这里不做修改。
+	2> 需要注意的是CannonV2中没有UserButton,而LED的位置也不完全对应。（nucleo中的LD2和CannonV2所使用的引脚有冲突，所以要重新便携这部分代码。）
+		 因为新建一种等同于nucleo或者sensetile的设备是困难的，需要修改更多的代码。（差不多近70处需要修改）所以目前修改的想法是基于nucleo平台做适当的修改。
+		 所以这一出关于button的代码不做修改，但是LD2的代码做一定修改。
+		 更改办法是添加了一个CANNONV2的宏定义，并修改stm32f4xx_nucleo.h中关于LED2的代码。		(CANNONV2)
+	3> 关于I2C_Global_Init的问题。尽管CannonV2上的I2C引脚和nucleo不一样，但是都是使用I2C1的AF04配置.所以这个函数不用修改，但是需要修改HAL_I2C_MspInit中引脚定义。
+		 其实最终修改的是stm32f4xx_periph_conf.h文件中关于I2C1_CMN_DEFAULT_SCL_PIN和I2C1_CMN_DEFAULT_SDA_PIN的宏定义  
+	4> 关于SPI_Global_Init的问题。尽管引脚不同，但是关键部分还是使用SPI1的AF05配置。有一点需要注意，NSS在nucleo中是soft的配置。其实cannonv2里面却可以使用hard或者soft配置。
+	   为了方便器件使用软的配置。那么主要的修改部分将是引脚。这里依然需要修改宏定义从而真正改变HAL_SPI_MspInit的配置。
+	   另外BlueNRG相关的RST和IRQ也需要配置好。整个模块可以作为IDB05A1。
+	   HAL_SPI_MspInit此函数中包含的有Reset、SCLK、MISO、MOSI、CS、IRQ。具体引脚的修改在stm32f4xx_periph_conf.h文件中。使用宏CANNONV2。要注意IRQ的配置要更高的EXTI4
+	   
+	5> 关于Init_MEM1_Sensors。这个函数比较复杂，它配置了所有的传感器类型。这里面比较重要的是BSP_ACCELERO_Init_IKS01A1和BSP_ACCELERO_Init_IKS01A2
+		 因为CANNONV2的板子尽管大部分和IKS01A1一致，但是磁力计由LIS3MDL换成了LSM303AGR。陀螺仪和加速度计也只有LSM6DS3而没有LSM6DS0.所以需要了解这部分到底是怎么实现的。
+		 BSP_ACCELERO_Init_IKS01A1与BSP_ACCELERO_Init_IKS01A2作用类似。在识别陀螺仪和加速度计时先尽量有限使用LSM6DS3否则是LSM6DS0.
+
+		 需要说的的是对于IKS01A1板子，上面的LSM6DS0(或LSM6DS3)里面既有陀螺仪也有加速度计，而LIS3MDL只是磁力计。但是如果是IKS01A2的LSM6DSL和LSM303AGR都包含一个加速度计。
+		 所以在初始化的时候有很小的不同。
+		 注意BSP_LSM6DS3_ACCELERO_Init函数。因为所有的sensor使用I2C通讯，除了I2C接口之外还有一个INT线(中断线)，而中断线的配置在函数LSM6DS3_Sensor_IO_ITConfig中。
+		 此时设计修改的文件是x_nucleo_iks01a1.h。（将PA4改为PC0）Gyro的初始化也是相同的。
+		 依照上述的方法修改LPS25HB(PB4->PC2)和HTS221(PB10->PC1)。同时为了防止LSM6DS0或者LIS3MDL可能产生的影响，也将他们的INT或DRDY引脚配置到无用的管脚上。
+		 /另一个比较困难的问题就是上面提到的怎么从LSM303AGR读取数据而不是LIS3MDL的。
+
+	6> 尽管做了上述修改，但是还是没有解决所有问题。其中有几个问题是设计中断处理的问题。
+		此文件之前定义的中断程序如下：
+			> HAL_TIM_IRQHandler(&TimEnvHandle);
+			> HAL_TIM_IRQHandler(&TimCCHandle);
+			> EXTI0_IRQHandler : HAL_GPIO_EXTI_IRQHandler(SPI1_CMN_DEFAULT_IRQ_PIN);
+			> EXTI15_10_IRQHandler : HAL_GPIO_EXTI_IRQHandler(KEY_BUTTON_PIN);
+			> EXTI4_IRQHandler : HAL_GPIO_EXTI_IRQHandler(M_INT1_PIN);
+			> EXTI9_5_IRQHandler : HAL_GPIO_EXTI_IRQHandler(LSM6DSL_INT1_O_PIN);
+			这些函数中比较关键的是GPIO回掉函数HAL_GPIO_EXTI_Callback，这个函数在main函数中做了定义。所以如果想了解程序流程这也是其中一步
+
+
+
+	6> 问题：IAR编译出错，即便是原始工程。MDK编译没有问题。IAR提示的是link问题，所以不清楚是编译器配置问题。
+			问题尚未搞懂，可能是IAR版本的问题。因为我尝试不做修改直接编译IAR版本也是出现问题，而MDK版本则没有问题。
+
+	7> 另一个问题是函数中没有看到过关于IKS01A1或者IKS01A2的定义，也没有关于IDB05A1或者IDB04A1的定义，所以整个函数的编译是怎么控制的呐？
+
+			整个项目中并未见到 #define IKS01A1或者#define IKS01A2，而整块板子的配置应该不是通过这两个来实现的。
+			正如上文所说，整个项目的配置是通过TargetBoardFeatures来管理的。而MEMS的管理是通过函数Init_MEM1_Sensors来初始化的。
+			因为根据串口调试输出的信息，应该是BSP_ACCELERO_Init_IKS01A1函数没有真正识别出正确的板子来。而更进一步应该是BSP_LSM6DS3_ACCELERO_Init函数没有初始化成功。
+
+			关于LSM6DS3的硬件Cannon V2板子还是有一部分修改的。原先的mki160v1板子上实际有两个中断引脚，但是有一个cannon v2没有使用。
+			LSM6DS3_Sensor_IO_ITConfig应该是负责引脚中断引脚配置的。但是检查这部分并没有发现错误。
+			应该是中断处理程序没有对应好。
+			但是修改之后似乎还是不起作用。
+
+			通过调试追踪发现在文件x_nucleo_iks01a1_accelero.c的line230出现问题。  
+			if ( driver->Init( (DrvContextTypeDef *)(*handle) ) == COMPONENT_ERROR )
+			应该是初始化除了问题。具体的就是LSM6DS3_X_Init的初始化可能出现问题。
+			实际测试觉得是没有通过I2C读到正确的ID，继续测试发现I2C的读取整个出现了错误。那么怎么测试到底哪里出现了错误呐？
+			重新在线调试发现I2C初始化时成功的。发现在读设备身份的时候的确获得了一个数值是0xC1.但这个不是who_i_am的取值。
+
+			发现初始化的时候的确设置了错误的I2C地址，因为硬件上SDO/SDA上拉至3.3v。
+
+			需要注意这主要设计两个函数：
+			BSP_LSM6DS3_ACCELERO_Init()和BSP_LSM6DS0_GYRO_Init()
+
+
+	8> 因为地址的问题，现在需要对所有相关I2C接口连接的设备做一番整理。
+		 LSM6DS3的SDO/SDA上拉，因此使用高的I2C地址。(1101011b, 0xD6)
+	   LPS25HB的CS拉高，使用I2C模式。SDO/SA0 拉高，地址使用高位地址1011101xb (0xba)。
+	   HTS221的CS拉高，I2C模式。（1011111b, 0xbe）
+	   LSM303AGR里面有Acc和Mag。Acc地址是0011001b(0x32)，Mag地址是0011110b(0x3C)
+
+	   （简单浏览发现没有什么问题。）
+			
+		移植成功
+		yeah	
+
+
+
+			
+
+
+7、通讯协议上要注意另一个ST的协议BlueST
+http://www.st.com/content/st_com/en/products/embedded-software/wireless-connectivity-software/bluest-sdk.html
+https://github.com/STMicroelectronics-CentralLabs/BlueSTSDK_Android
+
+这个协议是开发适配软件的基础。
+
+8、 
+
+9 

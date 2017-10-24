@@ -1,0 +1,11 @@
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\hci\hci_le.c
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\hal_types.h
+stm32f4xx-nucleo\hci_le.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\osal.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\ble_status.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\hal.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\hci_const.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\compiler.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\link_layer.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\hci.h
+stm32f4xx-nucleo\hci_le.o: ..\..\..\..\..\..\Middlewares\ST\STM32_BlueNRG\SimpleBlueNRG_HCI\includes\ble_list.h
