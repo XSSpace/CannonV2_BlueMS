@@ -1,0 +1,3 @@
+My board is Cannon V2 made by juma.io. And this is also a open project in github. find it here: https://github.com/JUMA-IO/STM32_Platform  Because all of senses in this board come from ST. And this board is made by juma but in ST's help. But because this project may seem like not update. So I want to use the same board but … 
+
+简单测试觉得ST的代码写的很不错，算法也很好
